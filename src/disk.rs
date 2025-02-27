@@ -4,7 +4,28 @@ use serde_json::json;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
+use std::process::Command;
 use crate::utils::convertor::bytes_to_gb;
+
+fn get_disk_model(device: &str) -> Option<String> {
+    let output = Command::new("lsblk")
+        .arg("-J")  // JSON output
+        .output()
+        .ok()?;
+
+    let json_output: serde_json::Value = serde_json::from_slice(&output.stdout).ok()?;
+
+    if let Some(blockdevices) = json_output.get("blockdevices").and_then(|b| b.as_array()) {
+        for device_info in blockdevices {
+            if let Some(name) = device_info.get("name").and_then(|n| n.as_str()) {
+                if name == device.strip_prefix("/dev/").unwrap_or(name) {
+                    return device_info.get("model").and_then(|m| m.as_str()).map(|s| s.to_string());
+                }
+            }
+        }
+    }
+    None
+}
 
 pub fn get_physical_disks() -> serde_json::Value {
     let disks = Disks::new_with_refreshed_list();
@@ -22,12 +43,15 @@ pub fn get_physical_disks() -> serde_json::Value {
             continue;
         }
 
-        if (["overlay", "vfat"].contains(&&*filesystem)) {
+        if ["overlay", "vfat"].contains(&&*filesystem) {
             continue;
         }
 
+        let model_name = get_disk_model(&device_name).unwrap_or_else(|| "Unknown".to_string());
+
         real_disks.push(json!({
             "device": device_name,
+            "model": model_name,
             "mountpoint": mount_point,
             "filesystem": filesystem,
             "total_size": bytes_to_gb(total_size),
