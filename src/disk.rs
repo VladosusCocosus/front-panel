@@ -22,6 +22,10 @@ pub fn get_physical_disks() -> serde_json::Value {
             continue;
         }
 
+        if (["overlay", "vfat"].contains(&&*filesystem)) {
+            continue;
+        }
+
         real_disks.push(json!({
             "device": device_name,
             "mountpoint": mount_point,
