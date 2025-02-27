@@ -1,5 +1,5 @@
 use serde_json::{json, Value};
-use sysinfo::{System, RefreshKind, CpuRefreshKind, Cpu};
+use sysinfo::{System, RefreshKind, CpuRefreshKind};
 
 pub fn get_cpu_info () -> Vec<Value> {
     let mut cpus = Vec::new();
