@@ -1,11 +1,14 @@
 mod disk;
 mod utils;
+mod cpu;
 
-use disk::write_disk_info;
-use serde_json::to_string_pretty;
+use disk::disk::write_disk_info;
+use cpu::cpu::get_cpu_info;
+use serde_json::json;
 
 fn main() {
-    let disk_data = write_disk_info();
-    let json_data = to_string_pretty(&disk_data).unwrap();
-    println!("{}", json_data);
+    println!("{}", json!({
+        "disks": write_disk_info(),
+        "cpus": get_cpu_info(),
+    }));
 }
