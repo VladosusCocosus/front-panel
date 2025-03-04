@@ -1,8 +1,6 @@
-use serde_json::{json, Value};
-use sysinfo::{System, RefreshKind, CpuRefreshKind};
+use sysinfo::{System, RefreshKind, CpuRefreshKind, Cpu};
 
-pub fn get_cpu_info () -> Vec<Value> {
-    let mut cpus = Vec::new();
+pub fn get_system_cpu_refreshed () -> System {
     let mut system = System::new_with_specifics(
         RefreshKind::nothing().with_cpu(CpuRefreshKind::everything()),
     );
@@ -10,13 +8,6 @@ pub fn get_cpu_info () -> Vec<Value> {
     std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
     system.refresh_cpu_all();
 
-    for cpu in system.cpus() {
-        cpus.push(json!({
-            "brand": cpu.brand(),
-            "name":  cpu.name(),
-            "usage": cpu.cpu_usage()
-        }));
-    }
-    
-    return cpus
+
+    system
 }
